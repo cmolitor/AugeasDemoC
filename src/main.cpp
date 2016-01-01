@@ -105,7 +105,7 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
         sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/netmask";
         path = sPath.c_str();
         ret = aug_rm(myAug, path);
-        std::cout << "Address node removed: " << ret << std::endl;
+        std::cout << "Netmask node removed: " << ret << std::endl;
     }else if (DHCP==0){
         // augeas set /files/etc/network/interfaces/iface[3]/method = "static"
         // augeas add and set /files/etc/network/interfaces/iface[3]/address = "192.168.0.1" if not available otherwise set
@@ -122,7 +122,7 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << "Debug: " << value << std::endl;
 
     // Set the save mode: overwrite/backup/newfile/noop
-    ret = aug_set(myAug, "/augeas/save", "overwrite");
+    ret = aug_set(myAug, "/augeas/save", "newfile");
     std::cout << "Save mode set: " << ret << std::endl;
 
     // Save the changed config files
@@ -160,8 +160,6 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     }
 
     aug_close(myAug);
-
-    std::cout << "After augeas stuff\n";
 
     return 0;
 }
