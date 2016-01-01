@@ -75,13 +75,13 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
         const char *value;
         int ret = aug_get(myAug, path, &value);  // todo: ret has to be 1, otherwise value is NULL
         if (ret==1){
-            std::cout << ret << ": " << value << std::endl;
+            //std::cout << ret << ": " << value << std::endl;
             buffer.str(std::string()); // clear stream "buffer"
             buffer << value << std::flush;
-            std::cout << buffer.str() << std::endl;
+            //std::cout << buffer.str() << std::endl;
             if (buffer.str()=="wlan0"){
                 iWlanInterface = i;
-                std::cout << "here is the wifi" << std::to_string(iWlanInterface) << std::endl;
+                std::cout << "wlan0: " << std::to_string(iWlanInterface) << std::endl;
             }
         }else{
             std::cout << "no value" << std::endl;
