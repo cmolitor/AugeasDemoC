@@ -130,9 +130,34 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << "File saved: " << ret << std::endl;
 
     // Check which files have been saved
-    ret = aug_get(myAug, "/augeas/events/saved", &value);
-    std::cout << "Saved files: " << ret << std::endl;
-    std::cout << "List of saved files: " << value << std::endl;
+    // ret = aug_get(myAug, "/augeas/events/saved", &value);
+    // std::cout << "Number of saved files: " << ret << std::endl;
+    // buffer.str(std::string()); // clear stream "buffer"
+    // buffer << value << std::flush;
+    // std::cout << "List of saved files: " << buffer.str() << std::endl;
+
+    // Reading and showing saved files
+    char **pathSaved= NULL;
+    ret = aug_match(myAug, "/augeas/events/saved", &pathSaved);
+    std::cout << "Number of files: " << std::to_string(ret) << std::endl;
+    const char *val;
+    //printf("\n ERR: match = %d\n", n);
+    for (int j = 0; j < ret; j++) {
+        aug_get(myAug, pathSaved[j], &val);
+        std::cout << pathSaved[j] << std::endl;
+        //printf("\n ERR: %s\n", val);
+    }
+
+    // Reading and showing error messages
+    char **pathsErrors = NULL;
+    ret = aug_match(myAug, "/augeas//error", &pathsErrors);
+    std::cout << "Number of errors: " << std::to_string(ret) << std::endl;
+    //printf("\n ERR: match = %d\n", n);
+    for (int j = 0; j < ret; j++) {
+        aug_get(myAug, pathsErrors[ret], &val);
+        std::cout << pathsErrors[ret] << std::endl;
+        //printf("\n ERR: %s\n", val);
+    }
 
     aug_close(myAug);
 
