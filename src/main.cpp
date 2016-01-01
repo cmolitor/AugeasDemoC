@@ -6,9 +6,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <augeas.h>
+#include <boost/filesystem.hpp>
 
-// set wifi client data; DHCP, IP, network, SSID, password
+// set wifi client data; DHCP, IP, ...
 int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string sRouter){
+    // Get execution path and construct relative path of example config file
+    // for changing real interfaces config: std::string = "/etc/network/interfaces/"
+    std::stringstream buffer;
+    buffer << boost::filesystem::path(boost::filesystem::current_path()).string();
+    buffer << "/network/interfaces/" << std::flush;
+    std::string sPathExec = buffer.str();
+    std::cout << "Execution path is: " << sPathExec << std::endl;
+
     // Augeas library for manipulating config files
     // read: https://github.com/hercules-team/augeas/wiki/Loading-specific-files
     // The comments contain the equivalent 
@@ -41,8 +50,8 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
 
     // Set incl(ude) path which should be parsed
     // Terminal: augtool> set /augeas/load/Interfaces/incl "/etc/network/interfaces"
-    //ret = aug_set(myAug, "/augeas/load/Interfaces/incl", "/etc/network/interfacesClient/");
-    ret = aug_set(myAug, "/augeas/load/Interfaces/incl", "/home/pi/AugeasDemoC/network/interfaces/");
+    path = sPathExec.c_str();
+    ret = aug_set(myAug, "/augeas/load/Interfaces/incl", path);
     std::cout << "Incl: " << ret << std::endl;
 
     // Load/parse config files
@@ -51,26 +60,23 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << "Augeas Load: " << ret << std::endl;
 
     // Check for matches
-    //int nMatches = aug_match(myAug, "/files/etc/network/interfacesClient/iface", matches);
-    int nMatches = aug_match(myAug, "/files/home/pi/AugeasDemoC/network/interfaces/iface", matches);
+    sPath= "/files" + sPathExec + "iface";
+    path = sPath.c_str();
+    int nMatches = aug_match(myAug, path, matches);
     std::cout << "Number of matches: " << nMatches << std::endl;
-
 
     // Check which network interface is the wifi interface (wlan0)
     int iWlanInterface = -1;
 
     for (int i=1; i<=nMatches; i++){
-        //sPath = "/files/etc/network/interfacesClient/iface[";
-        sPath = "/files/home/pi/AugeasDemoC/network/interfaces/iface[";
-        sPath += std::to_string(i);
-        sPath += "]";
+        sPath = "/files" + sPathExec + "iface[" + std::to_string(i) + "]";
         std::cout << sPath << std::endl;
         path = sPath.c_str();
         const char *value;
         int ret = aug_get(myAug, path, &value);  // todo: ret has to be 1, otherwise value is NULL
         if (ret==1){
             std::cout << ret << ": " << value << std::endl;
-            std::stringstream buffer;
+            buffer.str(std::string()); // clear stream "buffer"
             buffer << value << std::flush;
             std::cout << buffer.str() << std::endl;
             if (buffer.str()=="wlan0"){
@@ -84,22 +90,19 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
 
     if (DHCP==1){
         // augeas set /files/etc/network/interfaces/iface[3]/method = "dhcp"
-        //sPath= "/files/etc/network/interfacesClient/iface[" + std::to_string(iWlanInterface) + "]/method";
-        sPath= "/files/home/pi/AugeasDemoC/network/interfaces/iface[" + std::to_string(iWlanInterface) + "]/method";
+        sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
         path = sPath.c_str();
         ret = aug_set(myAug, path, "dhcp");
         std::cout << "Set dhcp: " << ret << std::endl;
 
         // augeas rm /files/etc/network/interfaces/iface[3]/address = "192.168.0.1" if available
-        //sPath= "/files/etc/network/interfacesClient/iface[" + std::to_string(iWlanInterface) + "]/address";
-        sPath= "/files/home/pi/AugeasDemoC/network/interfaces/iface[" + std::to_string(iWlanInterface) + "]/address";
+        sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/address";
         path = sPath.c_str();
         ret = aug_rm(myAug, path);
         std::cout << "Address node removed: " << ret << std::endl;
 
         // augeas rm /files/etc/network/interfaces/iface[3]/netmask = "255.255.255.0" if available
-        //sPath = "/files/etc/network/interfacesClient/iface[" + std::to_string(iWlanInterface) + "]/netmask";
-        sPath = "/files/home/pi/AugeasDemoC/network/interfaces/iface[" + std::to_string(iWlanInterface) + "]/netmask";
+        sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/netmask";
         path = sPath.c_str();
         ret = aug_rm(myAug, path);
         std::cout << "Address node removed: " << ret << std::endl;
@@ -111,13 +114,25 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
         std::cout << "No valid DHCP mode" << std::endl;
     }
 
+    // Reading values; just for debugging
+    sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
+    path = sPath.c_str();
+    const char *value;
+    ret = aug_get(myAug, path, &value);
+    std::cout << "Debug: " << value << std::endl;
+
     // Set the save mode: overwrite/backup/newfile/noop
-    ret = aug_set(myAug, "/augeas/save", "backup");
+    ret = aug_set(myAug, "/augeas/save", "overwrite");
     std::cout << "Save mode set: " << ret << std::endl;
 
     // Save the changed config files
     ret = aug_save(myAug);
     std::cout << "File saved: " << ret << std::endl;
+
+    // Check which files have been saved
+    ret = aug_get(myAug, "/augeas/events/saved", &value);
+    std::cout << "Saved files: " << ret << std::endl;
+    std::cout << "List of saved files: " << value << std::endl;
 
     aug_close(myAug);
 

@@ -7,7 +7,7 @@ EXEC = ./augeasDemo
 #SOURCES = $(wildcard src/*.cpp)
 SOURCES = $(wildcard src/*.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
-LIBS = -lmosquitto -lwiringPi -laugeas
+LIBS = -lmosquitto -lwiringPi -laugeas -lboost_system -lboost_filesystem
 INC=-I./../include -I/usr/include/libxml2
 
 
