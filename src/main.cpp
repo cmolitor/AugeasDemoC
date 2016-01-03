@@ -114,10 +114,15 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
         std::cout << "No valid DHCP mode" << std::endl;
     }
 
+    // Reading version of augeas
+    const char *value;
+    ret = aug_get(myAug, "/augeas/version", &value);
+    std::cout << "Version: " << value << std::endl;
+
     // Reading values; just for debugging
     sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
     path = sPath.c_str();
-    const char *value;
+    //const char *value;
     ret = aug_get(myAug, path, &value);
     std::cout << "Debug: " << value << std::endl;
 
