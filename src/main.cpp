@@ -32,10 +32,13 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     augeas *myAug = NULL;
     std::string sPath;
     int ret = 0;
+    int iMatches = 0;
     unsigned int flags = AUG_NO_MODL_AUTOLOAD;  // AUG_NO_MODL_AUTOLOAD: really do not load // AUG_NO_LOAD: do not load/scan files // 0
     const char *root = NULL; //sRoot.c_str();
     const char *path = NULL;
-    char ***matches = NULL;
+    char **matches = NULL;
+    const char *value;
+    char **pathsErrors = NULL;
 
     // Terminal: augtool --noautoload
     // The flag is set to --noautoload in order to speed up the initialization. 
@@ -57,23 +60,42 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     // Load/parse config files
     // Terminal: augtool> load
     ret = aug_load(myAug);
-    std::cout << "Augeas Load: " << ret << std::endl;
+    std::cout << "Augeas load: " << ret << std::endl;
+
+    // Reading and showing error messages
+    ret = aug_match(myAug, "/augeas//error", &pathsErrors);
+    std::cout << "Number of errors: " << std::to_string(ret) << std::endl;
+    //printf("\n ERR: match = %d\n", n);
+    for (int j = 0; j < ret; j++) {
+        aug_get(myAug, pathsErrors[j], &value);
+        std::cout << pathsErrors[j] << std::endl;
+        //printf("\n ERR: %s\n", val);
+    }
 
     // Check for matches
     sPath= "/files" + sPathExec + "iface";
     path = sPath.c_str();
-    int nMatches = aug_match(myAug, path, matches);
-    std::cout << "Number of matches: " << nMatches << std::endl;
+    iMatches = aug_match(myAug, path, &matches);
+    std::cout << "Number of matches: " << iMatches << std::endl;
+    // Print matches
+    for (int j = 0; j < iMatches; j++) {
+        //aug_get(myAug, matches[j], &value);
+        std::cout << matches[j] << std::endl;
+        //printf("\n ERR: %s\n", val);
+    }
+
+    std::cout << "===========" << std::endl;
+
 
     // Check which network interface is the wifi interface (wlan0)
     int iWlanInterface = -1;
 
-    for (int i=1; i<=nMatches; i++){
+    for (int i=1; i<=iMatches; i++){
         sPath = "/files" + sPathExec + "iface[" + std::to_string(i) + "]";
         std::cout << sPath << std::endl;
         path = sPath.c_str();
         const char *value;
-        int ret = aug_get(myAug, path, &value);  // todo: ret has to be 1, otherwise value is NULL
+        ret = aug_get(myAug, path, &value);  // todo: ret has to be 1, otherwise value is NULL
         if (ret==1){
             //std::cout << ret << ": " << value << std::endl;
             buffer.str(std::string()); // clear stream "buffer"
@@ -115,14 +137,12 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     }
 
     // Reading version of augeas
-    const char *value;
     ret = aug_get(myAug, "/augeas/version", &value);
     std::cout << "Version: " << value << std::endl;
 
     // Reading values; just for debugging
     sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
     path = sPath.c_str();
-    //const char *value;
     ret = aug_get(myAug, path, &value);
     std::cout << "Debug: " << value << std::endl;
 
@@ -145,22 +165,22 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     char **pathSaved= NULL;
     ret = aug_match(myAug, "/augeas/events/saved", &pathSaved);
     std::cout << "Number of files: " << std::to_string(ret) << std::endl;
-    const char *val;
+    //const char *val;
     //printf("\n ERR: match = %d\n", n);
     for (int j = 0; j < ret; j++) {
-        aug_get(myAug, pathSaved[j], &val);
+        aug_get(myAug, pathSaved[j], &value);
         std::cout << pathSaved[j] << std::endl;
         //printf("\n ERR: %s\n", val);
     }
 
     // Reading and showing error messages
-    char **pathsErrors = NULL;
+    // char **pathsErrors = NULL;
     ret = aug_match(myAug, "/augeas//error", &pathsErrors);
     std::cout << "Number of errors: " << std::to_string(ret) << std::endl;
     //printf("\n ERR: match = %d\n", n);
     for (int j = 0; j < ret; j++) {
-        aug_get(myAug, pathsErrors[ret], &val);
-        std::cout << pathsErrors[ret] << std::endl;
+        aug_get(myAug, pathsErrors[j], &value);
+        std::cout << pathsErrors[j] << std::endl;
         //printf("\n ERR: %s\n", val);
     }
 
