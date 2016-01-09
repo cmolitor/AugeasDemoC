@@ -40,6 +40,10 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     const char *value = NULL;
     char **pathsErrors = NULL;
 
+    // ==================
+    // Initialization of augeas
+    // ==================
+
     // Terminal: augtool --noautoload
     // The flag is set to --noautoload in order to speed up the initialization. 
     // If the flag is not set, the standard config files are loaded which takes a while.
@@ -75,6 +79,10 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
         }
     }
 
+    // ==================
+    // Checking for specific nodes
+    // ==================
+
     // Check for matches
     sPath= "/files" + sPathExec + "iface";
     path = sPath.c_str();
@@ -102,31 +110,15 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
         }
     }
 
-    if (DHCP==1){
-        // Terminal: augtool > set /files/home/pi/AugeasDemoC/network/interfaces/iface[3]/method dhcp
-        sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
-        path = sPath.c_str();
-        ret = aug_set(myAug, path, "dhcp");
-        std::cout << "Set dhcp: " << ret << std::endl;
+    // ==================
+    // Changing value of nodes
+    // ==================
 
-        // augeas rm /files/etc/network/interfaces/iface[3]/address = "192.168.0.1" if available
-        sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/address";
-        path = sPath.c_str();
-        ret = aug_rm(myAug, path);
-        std::cout << "Address node removed: " << ret << std::endl;
-
-        // augeas rm /files/etc/network/interfaces/iface[3]/netmask = "255.255.255.0" if available
-        sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/netmask";
-        path = sPath.c_str();
-        ret = aug_rm(myAug, path);
-        std::cout << "Netmask node removed: " << ret << std::endl;
-    }else if (DHCP==0){
-        // augeas set /files/etc/network/interfaces/iface[3]/method = "static"
-        // augeas add and set /files/etc/network/interfaces/iface[3]/address = "192.168.0.1" if not available otherwise set
-        // augeas add and set /files/etc/network/interfaces/iface[3]/netmask = "255.255.255.0" if not available otherwise set
-    }else{
-        std::cout << "No valid DHCP mode" << std::endl;
-    }
+    // Terminal: augtool > set /files/home/pi/AugeasDemoC/network/interfaces/iface[3]/method dhcp
+    sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
+    path = sPath.c_str();
+    ret = aug_set(myAug, path, "dhcp");
+    std::cout << "Set dhcp: " << ret << std::endl;
 
     // Reading version of augeas
     ret = aug_get(myAug, "/augeas/version", &value);
@@ -137,6 +129,10 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     path = sPath.c_str();
     ret = aug_get(myAug, path, &value);
     std::cout << "Debug: " << value << std::endl;
+
+    // ==================
+    // Saving changes back to file
+    // ==================
 
     // Set the save mode: overwrite/backup/newfile/noop
     ret = aug_set(myAug, "/augeas/save", "newfile");
