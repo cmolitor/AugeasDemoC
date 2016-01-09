@@ -37,7 +37,7 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     const char *root = NULL; //sRoot.c_str();
     const char *path = NULL;
     char **matches = NULL;
-    const char *value;
+    const char *value = NULL;
     char **pathsErrors = NULL;
 
     // Terminal: augtool --noautoload
@@ -63,13 +63,16 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << "Augeas load: " << ret << std::endl;
 
     // Reading and showing error messages
-    ret = aug_match(myAug, "/augeas//error", &pathsErrors);
-    std::cout << "Number of errors: " << std::to_string(ret) << std::endl;
-    //printf("\n ERR: match = %d\n", n);
-    for (int j = 0; j < ret; j++) {
-        aug_get(myAug, pathsErrors[j], &value);
+    iMatches = aug_match(myAug, "/augeas//error/*", &pathsErrors);
+    std::cout << "Number of errors: " << std::to_string(iMatches) << std::endl;
+    for (int j = 0; j < iMatches; j++) {
+        ret = aug_get(myAug, pathsErrors[j], &value);
         std::cout << pathsErrors[j] << std::endl;
-        //printf("\n ERR: %s\n", val);
+        if (value!=NULL){
+            std::cout << value << std::endl;
+        }else{
+            std::cout << "Null" << std::endl;
+        }
     }
 
     // Check for matches
@@ -77,15 +80,6 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     path = sPath.c_str();
     iMatches = aug_match(myAug, path, &matches);
     std::cout << "Number of matches: " << iMatches << std::endl;
-    // Print matches
-    for (int j = 0; j < iMatches; j++) {
-        //aug_get(myAug, matches[j], &value);
-        std::cout << matches[j] << std::endl;
-        //printf("\n ERR: %s\n", val);
-    }
-
-    std::cout << "===========" << std::endl;
-
 
     // Check which network interface is the wifi interface (wlan0)
     int iWlanInterface = -1;
@@ -97,13 +91,11 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
         const char *value;
         ret = aug_get(myAug, path, &value);  // todo: ret has to be 1, otherwise value is NULL
         if (ret==1){
-            //std::cout << ret << ": " << value << std::endl;
             buffer.str(std::string()); // clear stream "buffer"
             buffer << value << std::flush;
-            //std::cout << buffer.str() << std::endl;
             if (buffer.str()=="wlan0"){
                 iWlanInterface = i;
-                std::cout << "wlan0: " << std::to_string(iWlanInterface) << std::endl;
+                std::cout << "Interface number of wlan0: " << std::to_string(iWlanInterface) << std::endl;
             }
         }else{
             std::cout << "no value" << std::endl;
@@ -111,7 +103,7 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     }
 
     if (DHCP==1){
-        // augeas set /files/etc/network/interfaces/iface[3]/method = "dhcp"
+        // Terminal: augtool > set /files/home/pi/AugeasDemoC/network/interfaces/iface[3]/method dhcp
         sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
         path = sPath.c_str();
         ret = aug_set(myAug, path, "dhcp");
@@ -151,37 +143,31 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << "Save mode set: " << ret << std::endl;
 
     // Save the changed config files
+    // Terminal: augtool > save
     ret = aug_save(myAug);
     std::cout << "File saved: " << ret << std::endl;
 
-    // Check which files have been saved
-    // ret = aug_get(myAug, "/augeas/events/saved", &value);
-    // std::cout << "Number of saved files: " << ret << std::endl;
-    // buffer.str(std::string()); // clear stream "buffer"
-    // buffer << value << std::flush;
-    // std::cout << "List of saved files: " << buffer.str() << std::endl;
-
     // Reading and showing saved files
+    // Terminal: augtool> print /augeas/events/saved
     char **pathSaved= NULL;
     ret = aug_match(myAug, "/augeas/events/saved", &pathSaved);
-    std::cout << "Number of files: " << std::to_string(ret) << std::endl;
-    //const char *val;
-    //printf("\n ERR: match = %d\n", n);
+    std::cout << "Number of stored files: " << std::to_string(ret) << std::endl;
     for (int j = 0; j < ret; j++) {
         aug_get(myAug, pathSaved[j], &value);
         std::cout << pathSaved[j] << std::endl;
-        //printf("\n ERR: %s\n", val);
     }
 
     // Reading and showing error messages
-    // char **pathsErrors = NULL;
-    ret = aug_match(myAug, "/augeas//error", &pathsErrors);
-    std::cout << "Number of errors: " << std::to_string(ret) << std::endl;
-    //printf("\n ERR: match = %d\n", n);
-    for (int j = 0; j < ret; j++) {
-        aug_get(myAug, pathsErrors[j], &value);
+    iMatches = aug_match(myAug, "/augeas//error/*", &pathsErrors);
+    std::cout << "Number of errors: " << std::to_string(iMatches) << std::endl;
+    for (int j = 0; j < iMatches; j++) {
+        ret = aug_get(myAug, pathsErrors[j], &value);
         std::cout << pathsErrors[j] << std::endl;
-        //printf("\n ERR: %s\n", val);
+        if (value!=NULL){
+            std::cout << value << std::endl;
+        }else{
+            std::cout << "Null" << std::endl;
+        }
     }
 
     aug_close(myAug);
