@@ -44,6 +44,8 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     // Initialization of augeas
     // ==================
 
+    std::cout << std::endl << "Here we start the initialization." << std::endl;
+
     // Terminal: augtool --noautoload
     // The flag is set to --noautoload in order to speed up the initialization. 
     // If the flag is not set, the standard config files are loaded which takes a while.
@@ -53,18 +55,18 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     // Set lens which should be loaded
     // Terminal: augtool> set /augeas/load/Interfaces/lens "Interfaces.lns"
     ret = aug_set(myAug, "/augeas/load/Interfaces/lens", "Interfaces.lns");
-    std::cout << "Lens: " << ret << std::endl;
+    std::cout << "Set lens: " << ret << std::endl;
 
     // Set incl(ude) path which should be parsed
     // Terminal: augtool> set /augeas/load/Interfaces/incl "/etc/network/interfaces"
     path = sPathExec.c_str();
     ret = aug_set(myAug, "/augeas/load/Interfaces/incl", path);
-    std::cout << "Incl: " << ret << std::endl;
+    std::cout << "Set incl: " << ret << std::endl;
 
     // Load/parse config files
     // Terminal: augtool> load
     ret = aug_load(myAug);
-    std::cout << "Augeas load: " << ret << std::endl;
+    std::cout << "Load augeas: " << ret << std::endl;
 
     // Reading and showing error messages
     iMatches = aug_match(myAug, "/augeas//error/*", &pathsErrors);
@@ -83,6 +85,8 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     // Checking for specific nodes
     // ==================
 
+    std::cout << std::endl << "Here we start searching for a specific node." << std::endl;
+
     // Check for matches
     sPath= "/files" + sPathExec + "iface";
     path = sPath.c_str();
@@ -90,7 +94,10 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << "Number of matches: " << iMatches << std::endl;
 
     // Check which network interface is the wifi interface (wlan0)
+    // todo: simplify by using XPath
     int iWlanInterface = -1;
+
+    std::cout << "The following paths have been found:" << std::endl;
 
     for (int i=1; i<=iMatches; i++){
         sPath = "/files" + sPathExec + "iface[" + std::to_string(i) + "]";
@@ -114,28 +121,32 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     // Changing value of nodes
     // ==================
 
+    std::cout << std::endl << "Here we start changing the value of the node."  <<std::endl;
+
     // Terminal: augtool > set /files/home/pi/AugeasDemoC/network/interfaces/iface[3]/method dhcp
     sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
     path = sPath.c_str();
     ret = aug_set(myAug, path, "dhcp");
-    std::cout << "Set dhcp: " << ret << std::endl;
+    std::cout << "Set value: " << ret << std::endl;
 
     // Reading version of augeas
     ret = aug_get(myAug, "/augeas/version", &value);
-    std::cout << "Version: " << value << std::endl;
+    std::cout << "Augeas version: " << value << std::endl;
 
     // Reading values; just for debugging
     sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
     path = sPath.c_str();
     ret = aug_get(myAug, path, &value);
-    std::cout << "Debug: " << value << std::endl;
+    std::cout << "The value read from node: " << value << std::endl;
 
     // ==================
     // Saving changes back to file
     // ==================
 
+    std::cout << std::endl << "Here we start saving changes back to files." << std::endl;
+
     // Set the save mode: overwrite/backup/newfile/noop
-    ret = aug_set(myAug, "/augeas/save", "newfile");
+    ret = aug_set(myAug, "/augeas/save", "overwrite");
     std::cout << "Save mode set: " << ret << std::endl;
 
     // Save the changed config files
