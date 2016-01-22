@@ -14,7 +14,7 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     // for changing real interfaces config: std::string = "/etc/network/interfaces/"
     std::stringstream buffer;
     //buffer << boost::filesystem::path(boost::filesystem::current_path()).string();
-    buffer << "/etc/network/interfaces/" << std::flush;
+    buffer << "/etc/network/interfaces" << std::flush;
     std::string sPathExec = buffer.str();
     std::cout << "Execution path is: " << sPathExec << std::endl;
 
@@ -88,7 +88,7 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << std::endl << "Here we start searching for a specific node." << std::endl;
 
     // Check for matches
-    sPath= "/files" + sPathExec + "iface";
+    sPath= "/files" + sPathExec + "/iface";
     path = sPath.c_str();
     iMatches = aug_match(myAug, path, &matches);
     std::cout << "Number of matches: " << iMatches << std::endl;
@@ -100,7 +100,7 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << "The following paths have been found:" << std::endl;
 
     for (int i=1; i<=iMatches; i++){
-        sPath = "/files" + sPathExec + "iface[" + std::to_string(i) + "]";
+        sPath = "/files" + sPathExec + "/iface[" + std::to_string(i) + "]";
         std::cout << sPath << std::endl;
         path = sPath.c_str();
         const char *value;
@@ -124,13 +124,13 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << std::endl << "Here we start changing the value of the node."  <<std::endl;
 
     // Reading values before changing
-    sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
+    sPath= "/files" + sPathExec + "/iface[" + std::to_string(iWlanInterface) + "]/method";
     path = sPath.c_str();
     ret = aug_get(myAug, path, &value);
     std::cout << "The value read from node before changing: " << value << std::endl;
 
     // Terminal: augtool > set /files/home/pi/AugeasDemoC/network/interfaces/iface[3]/method dhcp
-    sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
+    sPath= "/files" + sPathExec + "/iface[" + std::to_string(iWlanInterface) + "]/method";
     path = sPath.c_str();
     ret = aug_set(myAug, path, "dhcp");
     std::cout << "Set value: " << ret << std::endl;
@@ -140,7 +140,7 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     std::cout << "Augeas version: " << value << std::endl;
 
     // Reading values; just for debugging
-    sPath= "/files" + sPathExec + "iface[" + std::to_string(iWlanInterface) + "]/method";
+    sPath= "/files" + sPathExec + "/iface[" + std::to_string(iWlanInterface) + "]/method";
     path = sPath.c_str();
     ret = aug_get(myAug, path, &value);
     std::cout << "The value read from node after changing: " << value << std::endl;
