@@ -155,6 +155,16 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
     ret = aug_set(myAug, "/augeas/save", "overwrite");
     std::cout << "Save mode set: " << ret << std::endl;
 
+    // Reading and showing saved files
+    // Terminal: augtool> print /augeas/events/saved
+    char **pathSaved= NULL;
+    ret = aug_match(myAug, "/augeas/events/saved", &pathSaved);
+    std::cout << "Number of changed files: " << std::to_string(ret) << std::endl;
+    for (int j = 0; j < ret; j++) {
+        aug_get(myAug, pathSaved[j], &value);
+        std::cout << pathSaved[j] << std::endl;
+    }
+
     // Save the changed config files
     // Terminal: augtool > save
     ret = aug_save(myAug);
@@ -162,9 +172,9 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
 
     // Reading and showing saved files
     // Terminal: augtool> print /augeas/events/saved
-    char **pathSaved= NULL;
+    //**pathSaved= NULL;
     ret = aug_match(myAug, "/augeas/events/saved", &pathSaved);
-    std::cout << "Number of stored files: " << std::to_string(ret) << std::endl;
+    std::cout << "Number of changed files: " << std::to_string(ret) << std::endl;
     for (int j = 0; j < ret; j++) {
         aug_get(myAug, pathSaved[j], &value);
         std::cout << pathSaved[j] << std::endl;
