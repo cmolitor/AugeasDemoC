@@ -6,15 +6,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <augeas.h>
-#include <boost/filesystem.hpp>
 
 // set wifi client data; DHCP, IP, ...
 int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string sRouter){
-    // Get execution path and construct relative path of example config file
-    // for changing real interfaces config: std::string = "/etc/network/interfaces/"
     std::stringstream buffer;
-    //buffer << boost::filesystem::path(boost::filesystem::current_path()).string();
-    buffer << "/etc/network/interfaces" << std::flush;
+    buffer << "/etc/network/interfaces" << std::flush; // +++ IMPORTANT: no SLASH at the end of path, otherwise it will not work but there won't be an error message
     std::string sPathExec = buffer.str();
     std::cout << "Execution path is: " << sPathExec << std::endl;
 
@@ -172,7 +168,6 @@ int setWifiParameter(int DHCP, std::string sIP, std::string sSubnet, std::string
 
     // Reading and showing saved files
     // Terminal: augtool> print /augeas/events/saved
-    //**pathSaved= NULL;
     ret = aug_match(myAug, "/augeas/events/saved", &pathSaved);
     std::cout << "Number of changed files: " << std::to_string(ret) << std::endl;
     for (int j = 0; j < ret; j++) {
